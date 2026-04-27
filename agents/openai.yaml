@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF XML Package"
+  short_description: "Create one TEI/XML file with indexed Docling images"
+  default_prompt: "Use $grobid-docling-pdf to extract a scholarly PDF into one final XML file and an images directory, then archive and remove intermediate parser outputs."
