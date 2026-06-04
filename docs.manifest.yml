@@ -1,0 +1,13 @@
+schema_version: 1
+name: grobid-docling-pdf
+title: GROBID + Docling PDF 解析
+description: 将论文或技术 PDF 解析为包含正文结构和图表索引的 TEI/XML 包。
+entry: docs/index.md
+nav:
+  - title: 概览
+    path: docs/index.md
+  - title: 使用方式
+    path: docs/usage.md
+  - title: 参考
+    path: docs/reference.md
+status: bootstrap
