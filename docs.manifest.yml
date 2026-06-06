@@ -8,6 +8,8 @@ nav:
     path: docs/reference.md
   - title: 使用方式
     path: docs/usage.md
+  - title: 依赖说明
+    path: docs/dependencies.md
   - title: 架构概览
     path: docs/index.md
 status: bootstrap
