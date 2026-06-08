@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Verify external dependencies for grobid-docling-pdf.
+
+This script checks only user/environment prerequisites: Python packages,
+GROBID service reachability, and optional CUDA availability. Repository files,
+sample PDFs, generated artifacts, and parser self-tests are internal health
+checks and are intentionally outside this dependency check.
+"""
+
 from __future__ import annotations
 
 import argparse
