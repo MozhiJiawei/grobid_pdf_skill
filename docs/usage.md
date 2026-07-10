@@ -18,8 +18,10 @@
 
 ## 脚本入口
 
+以下命令从工作区根目录（即包含 `skills/` 和 `.tmp/` 的目录）运行：
+
 ```powershell
-python scripts/run_hybrid_pipeline.py `
+python skills/grobid_pdf_skill/scripts/run_hybrid_pipeline.py `
   --pdf path/to/paper.pdf `
   --out .tmp/pdf_xml/<paper-name> `
   --grobid-url http://localhost:8070 `
@@ -49,12 +51,16 @@ Agent 完成后应汇报：
 
 ## 依赖检查
 
-```powershell
-python verify_dependencies.py
-```
-
-只检查本地 Python 依赖、不检查 GROBID 服务时：
+以下命令同样从工作区根目录运行。默认检查包含 GROBID 服务，因为完整流水线必须使用它：
 
 ```powershell
-python verify_dependencies.py --skip-services
+python skills/grobid_pdf_skill/verify_dependencies.py
 ```
+
+仅在安装阶段预检本地 Python 包、不准备执行完整流水线时，才跳过 GROBID 服务检查：
+
+```powershell
+python skills/grobid_pdf_skill/verify_dependencies.py --skip-services
+```
+
+`--skip-services` 通过不代表 PDF 解析流水线已经可运行。
