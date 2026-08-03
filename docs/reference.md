@@ -14,9 +14,9 @@
 
 示例输入来自论文 [TiDAR: Think in Diffusion, Talk in Autoregression（arXiv 摘要页）](https://arxiv.org/abs/2511.08923)，原始 PDF 由 [arXiv PDF 链接](https://arxiv.org/pdf/2511.08923)提供。
 
-- [打开 TiDAR 表格图片样例](./assets/tidar-table-sample.png)
+- [打开 TiDAR 表格图片样例（PNG）](https://raw.githubusercontent.com/MozhiJiawei/grobid_pdf_skill/main/docs/assets/tidar-table-sample.png)
 - [打开 TiDAR 最终 XML（GitHub）](https://github.com/MozhiJiawei/hw-ppt-gen-html/blob/main/forward-tests/tidar-paper-deck/sources/tidar/final/tidar.xml)
-- [打开材料包展示图](./assets/pdf-xml-package-showcase.png)
+- [打开材料包展示图（PNG）](https://raw.githubusercontent.com/MozhiJiawei/grobid_pdf_skill/main/docs/assets/pdf-xml-package-showcase.png)
 
 这些链接只展示仓库中现有的示例证据。计数描述对应本次 TiDAR 示例，不代表所有 PDF 都会导出相同数量或质量的图片、表格和正文引用。
 
