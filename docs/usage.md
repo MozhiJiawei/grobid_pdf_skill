@@ -51,16 +51,10 @@ Agent 完成后应汇报：
 
 ## 依赖检查
 
-以下命令同样从工作区根目录运行。默认检查包含 GROBID 服务，因为完整流水线必须使用它：
+以下命令同样从工作区根目录运行。它检查 Python 包、Docker Desktop 是否可用，以及本地是否已有 GROBID 镜像；不会请求 GROBID API：
 
 ```powershell
 python skills/grobid_pdf_skill/verify_dependencies.py
 ```
 
-仅在安装阶段预检本地 Python 包、不准备执行完整流水线时，才跳过 GROBID 服务检查：
-
-```powershell
-python skills/grobid_pdf_skill/verify_dependencies.py --skip-services
-```
-
-`--skip-services` 通过不代表 PDF 解析流水线已经可运行。
+依赖检查通过只代表安装前提已满足。运行流水线前仍需启动 GROBID 容器并确保 `--grobid-url` 指向可访问的服务。

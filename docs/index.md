@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | Agent 使用约定 | `SKILL.md` | 定义默认工作流、最终输出契约和汇报要求，不是面向文档站的正文。 |
 | 发布文档 | `docs/` | 提供能力展示、使用方式、依赖与架构说明。 |
-| 依赖预检 | `verify_dependencies.py` | 检查 Python 包、可选 CUDA 状态及 GROBID HTTP 可达性。 |
+| 依赖预检 | `verify_dependencies.py` | 检查 Python 包、可选 CUDA 状态、Docker Desktop 可用性及本地 GROBID 镜像；不请求 GROBID HTTP API。 |
 | 流水线编排 | `scripts/run_hybrid_pipeline.py` | 负责阶段顺序、路径、归档和中间文件清理。 |
 | 解析与合并 | `scripts/grobid_parse_pdf.py`、`scripts/docling_export.py`、`scripts/merge_docling_into_grobid_tei.py` | 分别处理学术文本、视觉导出及统一 XML。 |
 | 交付校验 | `scripts/validate_hybrid_outputs.py` | 校验图片引用、索引和残留视觉记录，并以退出码决定流水线成败。 |

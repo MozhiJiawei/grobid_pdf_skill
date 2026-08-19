@@ -2,17 +2,16 @@
 """Verify external dependencies for grobid-docling-pdf.
 
 This script checks only user/environment prerequisites: Python packages,
-GROBID service reachability, and optional CUDA availability. Repository files,
-sample PDFs, generated artifacts, and parser self-tests are internal health
-checks and are intentionally outside this dependency check.
+Docker availability, a local GROBID image, and optional CUDA availability.
+Repository files, sample PDFs, generated artifacts, and parser self-tests are
+internal health checks and are intentionally outside this dependency check.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-from urllib.parse import urljoin
-from urllib.request import urlopen
+import platform
+import shutil
+import subprocess
 
 
 def pass_check(name: str, detail: str = "") -> None:
@@ -52,44 +51,91 @@ def check_torch_cuda() -> None:
         warn_check("torch cuda", "CUDA is not available; use --docling-device cpu or auto.")
 
 
-def check_grobid_service(grobid_url: str) -> bool:
-    alive_url = urljoin(grobid_url.rstrip("/") + "/", "api/isalive")
+def docker_guidance(system: str | None = None) -> tuple[str, str]:
+    system = system or platform.system()
+    if system == "Windows":
+        return (
+            "Install WSL2 and Docker Desktop, then start Docker Desktop.",
+            "Start Docker Desktop and ensure its WSL2 backend is working.",
+        )
+    return (
+        "Install Docker Desktop for Mac, then start Docker Desktop.",
+        "Start Docker Desktop for Mac and wait for the Docker engine to become ready.",
+    )
+
+
+def check_docker() -> str | None:
+    install_guidance, start_guidance = docker_guidance()
+    docker = shutil.which("docker")
+    if not docker:
+        fail_check(
+            "Docker",
+            f"docker command not found. {install_guidance}",
+        )
+        return None
+
     try:
-        with urlopen(alive_url, timeout=10) as response:
-            body = response.read().decode("utf-8", errors="replace").strip()
-    except Exception as exc:
-        fail_check("GROBID service", f"{alive_url} is not reachable: {exc}")
+        result = subprocess.run(
+            [docker, "version", "--format", "{{.Server.Version}}"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        detail = getattr(exc, "stderr", "") or str(exc)
+        fail_check(
+            "Docker",
+            f"Docker is installed but unavailable: {detail.strip()}. "
+            f"{start_guidance}",
+        )
+        return None
+
+    pass_check("Docker", f"server {result.stdout.strip() or 'available'}")
+    return docker
+
+
+def check_grobid_image(docker: str) -> bool:
+    try:
+        result = subprocess.run(
+            [docker, "image", "ls", "--format", "{{.Repository}}:{{.Tag}}"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        detail = getattr(exc, "stderr", "") or str(exc)
+        fail_check("GROBID image", f"could not list local Docker images: {detail.strip()}")
         return False
 
-    try:
-        parsed = json.loads(body)
-    except json.JSONDecodeError:
-        parsed = body
+    images = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    grobid_images = [image for image in images if "grobid" in image.rsplit(":", 1)[0].lower()]
+    if not grobid_images:
+        fail_check(
+            "GROBID image",
+            "no local GROBID Docker image found. Pull one first, for example: "
+            "docker pull grobid/grobid:0.8.2",
+        )
+        return False
 
-    pass_check("GROBID service", f"{alive_url} -> {parsed}")
+    pass_check("GROBID image", ", ".join(grobid_images))
     return True
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify dependencies for grobid-docling-pdf.")
-    parser.add_argument("--grobid-url", default="http://localhost:8070")
-    parser.add_argument(
-        "--skip-services",
-        action="store_true",
-        help="Only verify local Python dependencies; skip the GROBID HTTP service check.",
-    )
-    args = parser.parse_args()
-
     ok = True
     ok = import_module("docling", "docling") and ok
     ok = import_module("lxml", "lxml") and ok
     ok = import_module("torch", "torch") and ok
     check_torch_cuda()
 
-    if args.skip_services:
-        warn_check("GROBID service", "skipped")
+    docker = check_docker()
+    ok = bool(docker) and ok
+    if docker:
+        ok = check_grobid_image(docker) and ok
     else:
-        ok = check_grobid_service(args.grobid_url) and ok
+        warn_check("GROBID image", "skipped because Docker is unavailable")
 
     return 0 if ok else 1
 
