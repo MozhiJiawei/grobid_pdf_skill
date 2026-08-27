@@ -12,6 +12,7 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_GROBID_URL = "http://127.0.0.1:8070"
 
 
 def run(stage: str, command: list[str]) -> None:
@@ -57,7 +58,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run scholarly PDF extraction and package one XML file.")
     parser.add_argument("--pdf", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
-    parser.add_argument("--grobid-url", default="http://localhost:8070")
+    parser.add_argument("--grobid-url", default=DEFAULT_GROBID_URL)
     parser.add_argument("--docling-device", choices=["auto", "cuda", "cpu"], default="auto")
     parser.add_argument("--ocr", action="store_true")
     parser.add_argument(
@@ -96,6 +97,11 @@ def main() -> int:
     work_dir.mkdir(parents=True, exist_ok=True)
 
     python = sys.executable
+    if args.grobid_url.rstrip("/") == DEFAULT_GROBID_URL:
+        run(
+            "grobid-runtime",
+            [python, str(SCRIPT_DIR / "manage_grobid_runtime.py"), "ensure"],
+        )
     run(
         "grobid",
         [

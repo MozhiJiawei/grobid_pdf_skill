@@ -2,7 +2,7 @@
 """Verify external dependencies for grobid-docling-pdf.
 
 This script checks only user/environment prerequisites: Python packages,
-Docker availability, a local GROBID image, and optional CUDA availability.
+Docker availability, the unique local GROBID runtime policy, and optional CUDA availability.
 Repository files, sample PDFs, generated artifacts, and parser self-tests are
 internal health checks and are intentionally outside this dependency check.
 """
@@ -12,6 +12,14 @@ from __future__ import annotations
 import platform
 import shutil
 import subprocess
+import sys
+from pathlib import Path
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent / "scripts"
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from manage_grobid_runtime import RuntimePolicyError, inspect_runtime  # noqa: E402
 
 
 def pass_check(name: str, detail: str = "") -> None:
@@ -95,31 +103,18 @@ def check_docker() -> str | None:
     return docker
 
 
-def check_grobid_image(docker: str) -> bool:
+def check_grobid_runtime() -> bool:
     try:
-        result = subprocess.run(
-            [docker, "image", "ls", "--format", "{{.Repository}}:{{.Tag}}"],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except (subprocess.SubprocessError, OSError) as exc:
-        detail = getattr(exc, "stderr", "") or str(exc)
-        fail_check("GROBID image", f"could not list local Docker images: {detail.strip()}")
+        state = inspect_runtime()
+    except RuntimePolicyError as exc:
+        fail_check("GROBID runtime", str(exc))
         return False
-
-    images = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    grobid_images = [image for image in images if "grobid" in image.rsplit(":", 1)[0].lower()]
-    if not grobid_images:
-        fail_check(
-            "GROBID image",
-            "no local GROBID Docker image found. Pull one first, for example: "
-            "docker pull grobid/grobid:0.8.2",
-        )
-        return False
-
-    pass_check("GROBID image", ", ".join(grobid_images))
+    pass_check("GROBID image", "grobid/grobid:0.8.2 (unique)")
+    if state.container is None:
+        pass_check("GROBID container", "absent; the pipeline will create the shared container")
+    else:
+        status = "running" if state.container.get("State", {}).get("Running", False) else "stopped"
+        pass_check("GROBID container", f"grobid-docling-pdf ({status}, unique)")
     return True
 
 
@@ -133,9 +128,9 @@ def main() -> int:
     docker = check_docker()
     ok = bool(docker) and ok
     if docker:
-        ok = check_grobid_image(docker) and ok
+        ok = check_grobid_runtime() and ok
     else:
-        warn_check("GROBID image", "skipped because Docker is unavailable")
+        warn_check("GROBID runtime", "skipped because Docker is unavailable")
 
     return 0 if ok else 1
 

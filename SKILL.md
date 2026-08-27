@@ -15,7 +15,7 @@ For one PDF:
 python scripts/run_hybrid_pipeline.py \
   --pdf path/to/paper.pdf \
   --out .tmp/pdf_xml/<paper-name> \
-  --grobid-url http://localhost:8070 \
+  --grobid-url http://127.0.0.1:8070 \
   --docling-device auto
 ```
 
@@ -23,7 +23,7 @@ Use `--docling-device cuda` only after verifying CUDA PyTorch works. Use `--ocr`
 
 The pipeline:
 
-1. Runs GROBID for scholarly text structure and references.
+1. Ensures the single shared local GROBID container, then runs GROBID for scholarly text structure and references.
 2. Runs Docling for visual truth and exports figure/table PNGs.
 3. Writes one final TEI/XML file that indexes every exported Docling image.
 4. Deletes original GROBID figure/table records so Docling remains the only visual index.
@@ -31,6 +31,17 @@ The pipeline:
 6. Reports how many indexed images are also linked from real body `<ref>` elements.
 7. Archives intermediate parser outputs into `<out>/<paper-name>.intermediate_parse_results.zip`.
 8. Deletes the loose intermediate parser directories/files after the archive is created.
+
+## Local GROBID Runtime Policy
+
+- The only supported local image is `grobid/grobid:0.8.2`, and there must be exactly one local GROBID image ID.
+- All local parsing tasks share the single container `grobid-docling-pdf` at `http://127.0.0.1:8070`.
+- Never create per-paper, per-task, or per-agent GROBID containers.
+- Before local parsing, run `python scripts/manage_grobid_runtime.py ensure`. The default pipeline does this automatically.
+- `ensure` creates the standard container when absent, starts it when stopped, waits for `/api/isalive`, and otherwise reuses it.
+- Keep the standard container running after parsing because other tasks may be using it concurrently.
+- If extra GROBID images, extra containers, or configuration drift are detected, stop and report them. Do not silently delete or replace Docker resources without explicit user authorization.
+- A custom `--grobid-url` bypasses local Docker management and is the only supported way to use a remote or separately managed service.
 
 ## Final Output Contract
 

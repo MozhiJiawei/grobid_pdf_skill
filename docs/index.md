@@ -10,6 +10,7 @@
 
 | 阶段 | 脚本 | 职责 |
 | --- | --- | --- |
+| 本地运行时 | `scripts/manage_grobid_runtime.py` | 强制唯一标准镜像与共享容器，幂等创建或启动容器并等待健康检查。 |
 | 文本结构解析 | `scripts/grobid_parse_pdf.py` | 调用 GROBID，提取标题、摘要、正文、引用和参考文献结构。 |
 | 视觉内容导出 | `scripts/docling_export.py` | 调用 Docling，导出 PDF 中的图片、表格和 Docling JSON。 |
 | 结果合并 | `scripts/merge_docling_into_grobid_tei.py` | 将 Docling 图片索引写入 GROBID TEI，移除不可靠的 GROBID 图表记录。 |
@@ -26,6 +27,7 @@
 用户 prompt + PDF 路径
   -> 主 Agent 确认 PDF 类型、输出目录和依赖
   -> run_hybrid_pipeline.py
+     -> ensure 唯一共享 GROBID 容器
      -> GROBID TEI
      -> Docling JSON + images
      -> merged TEI/XML + final/images
@@ -42,7 +44,8 @@
 | --- | --- | --- |
 | Agent 使用约定 | `SKILL.md` | 定义默认工作流、最终输出契约和汇报要求，不是面向文档站的正文。 |
 | 发布文档 | `docs/` | 提供能力展示、使用方式、依赖与架构说明。 |
-| 依赖预检 | `verify_dependencies.py` | 检查 Python 包、可选 CUDA 状态、Docker Desktop 可用性及本地 GROBID 镜像；不请求 GROBID HTTP API。 |
+| 依赖预检 | `verify_dependencies.py` | 检查 Python 包、可选 CUDA、Docker Desktop、唯一标准 GROBID 镜像及容器唯一性；不改变容器状态。 |
+| 本地运行时 | `scripts/manage_grobid_runtime.py` | 复用固定的 `grobid-docling-pdf` 容器，禁止任务级容器，并等待服务健康。 |
 | 流水线编排 | `scripts/run_hybrid_pipeline.py` | 负责阶段顺序、路径、归档和中间文件清理。 |
 | 解析与合并 | `scripts/grobid_parse_pdf.py`、`scripts/docling_export.py`、`scripts/merge_docling_into_grobid_tei.py` | 分别处理学术文本、视觉导出及统一 XML。 |
 | 交付校验 | `scripts/validate_hybrid_outputs.py` | 校验图片引用、索引和残留视觉记录，并以退出码决定流水线成败。 |
@@ -62,6 +65,7 @@
 ## 设计边界
 
 - born-digital 论文默认不开 OCR；扫描版 PDF 才启用 `--ocr`。
+- 本地任务固定复用 `grobid/grobid:0.8.2` 与 `grobid-docling-pdf`，解析后保持容器运行以支持并发。
 - 最终 XML 只以 Docling 导出的图表图片作为视觉真值。
 - 中间 GROBID / Docling / merge / validation 文件默认打包进 zip 后移除。
 - 校验失败意味着 XML 包不完整，不能作为成功交付。

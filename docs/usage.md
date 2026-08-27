@@ -11,7 +11,7 @@
 ## 推荐流程
 
 1. 确认 PDF 是 born-digital 还是扫描版。
-2. 确认 GROBID 服务可用，默认地址是 `http://localhost:8070`。
+2. 确认唯一的共享 GROBID 运行时符合规范；默认流水线会自动检查、创建或启动它。
 3. 将输出目录放在主工作区 `.tmp/pdf_xml/<paper-name>/` 下。
 4. 运行混合解析流水线。
 5. 检查最终 XML、图片目录、归档 zip 和校验状态。
@@ -24,9 +24,18 @@
 python skills/grobid_pdf_skill/scripts/run_hybrid_pipeline.py `
   --pdf path/to/paper.pdf `
   --out .tmp/pdf_xml/<paper-name> `
-  --grobid-url http://localhost:8070 `
+  --grobid-url http://127.0.0.1:8070 `
   --docling-device auto
 ```
+
+本地默认模式固定复用 `grobid-docling-pdf` 容器，不要为论文、任务或 Agent 创建独立容器。容器不存在时流水线会创建并启动，已停止时会重新启动，解析完成后保持运行以支持并发任务。也可以单独检查或确保运行时：
+
+```powershell
+python skills/grobid_pdf_skill/scripts/manage_grobid_runtime.py status
+python skills/grobid_pdf_skill/scripts/manage_grobid_runtime.py ensure
+```
+
+只有显式传入非默认 `--grobid-url` 时，流水线才会跳过本地 Docker 管理。
 
 扫描版 PDF 才加：
 
@@ -51,10 +60,10 @@ Agent 完成后应汇报：
 
 ## 依赖检查
 
-以下命令同样从工作区根目录运行。它检查 Python 包、Docker Desktop 是否可用，以及本地是否已有 GROBID 镜像；不会请求 GROBID API：
+以下命令同样从工作区根目录运行。它检查 Python 包、Docker Desktop、唯一标准 GROBID 镜像以及本地容器唯一性；不会启动容器或请求 GROBID API：
 
 ```powershell
 python skills/grobid_pdf_skill/verify_dependencies.py
 ```
 
-依赖检查通过只代表安装前提已满足。运行流水线前仍需启动 GROBID 容器并确保 `--grobid-url` 指向可访问的服务。
+依赖检查允许标准容器尚未创建；默认流水线会调用运行时管理脚本，将唯一标准容器处理到可用状态。

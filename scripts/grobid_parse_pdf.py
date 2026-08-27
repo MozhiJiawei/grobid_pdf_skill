@@ -161,7 +161,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Parse a PDF with GROBID using skill defaults.")
     parser.add_argument("--pdf", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
-    parser.add_argument("--grobid-url", default="http://localhost:8070")
+    parser.add_argument("--grobid-url", default="http://127.0.0.1:8070")
     parser.add_argument("--basename")
     args = parser.parse_args()
 
