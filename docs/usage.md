@@ -12,7 +12,7 @@
 
 1. 确认 PDF 是 born-digital 还是扫描版。
 2. 确认唯一的共享 GROBID 运行时符合规范；默认流水线会自动检查、创建或启动它。
-3. 将输出目录放在主工作区 `.tmp/pdf_xml/<paper-name>/` 下。
+3. 将输出目录放在主工作区 `.tmp/runs/<run-id>/grobid-docling-pdf/<paper-name>/` 下。
 4. 运行混合解析流水线。
 5. 检查最终 XML、图片目录、归档 zip 和校验状态。
 
@@ -23,7 +23,7 @@
 ```powershell
 python skills/grobid_pdf_skill/scripts/run_hybrid_pipeline.py `
   --pdf path/to/paper.pdf `
-  --out .tmp/pdf_xml/<paper-name> `
+  --out .tmp/runs/<run-id>/grobid-docling-pdf/<paper-name> `
   --grobid-url http://127.0.0.1:8070 `
   --docling-device auto
 ```

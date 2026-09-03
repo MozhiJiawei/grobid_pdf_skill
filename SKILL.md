@@ -14,7 +14,7 @@ For one PDF:
 ```bash
 python scripts/run_hybrid_pipeline.py \
   --pdf path/to/paper.pdf \
-  --out .tmp/pdf_xml/<paper-name> \
+  --out .tmp/runs/<run-id>/grobid-docling-pdf/<paper-name> \
   --grobid-url http://127.0.0.1:8070 \
   --docling-device auto
 ```

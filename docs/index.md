@@ -53,7 +53,7 @@
 ## 最终目录
 
 ```text
-.tmp/pdf_xml/<paper-name>/
+.tmp/runs/<run-id>/grobid-docling-pdf/<paper-name>/
 |-- final/
 |   |-- <paper-name>.xml
 |   `-- images/
